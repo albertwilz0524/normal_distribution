@@ -1,0 +1,787 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Normal Distribution: 68-95-99.7 Rule</title>
+    <style>
+        :root {
+            --primary: #4f46e5;
+            --primary-hover: #4338ca;
+            --success: #10b981;
+            --success-bg: #d1fae5;
+            --danger: #ef4444;
+            --danger-bg: #fee2e2;
+            --bg: #f3f4f6;
+            --card-bg: #ffffff;
+            --text-main: #1f2937;
+            --text-muted: #6b7280;
+            --border: #d1d5db;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+        }
+
+        body {
+            background-color: var(--bg);
+            color: var(--text-main);
+            line-height: 1.6;
+        }
+
+        /* Navbar */
+        .navbar {
+            background-color: var(--card-bg);
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            padding: 1rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+
+        .logo {
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: var(--primary);
+        }
+
+        .nav-buttons {
+            display: flex;
+            gap: 1rem;
+        }
+
+        .nav-btn {
+            background: transparent;
+            border: 2px solid transparent;
+            color: var(--text-muted);
+            font-weight: 600;
+            padding: 0.5rem 1rem;
+            border-radius: 9999px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .nav-btn:hover {
+            color: var(--primary);
+            background-color: #eef2ff;
+        }
+
+        .nav-btn.active {
+            background-color: var(--primary);
+            color: white;
+        }
+
+        /* Main Container */
+        .container {
+            max-width: 900px;
+            margin: 2rem auto;
+            padding: 0 1rem;
+        }
+
+        /* Views */
+        .view {
+            display: none;
+            animation: fadeIn 0.3s ease-in-out;
+        }
+
+        .view.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Problem Card */
+        .problem-card {
+            background-color: var(--card-bg);
+            border-radius: 12px;
+            padding: 2rem;
+            box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);
+            margin-bottom: 2rem;
+        }
+
+        .context-text {
+            font-size: 1.1rem;
+            font-weight: 500;
+            color: var(--text-main);
+            margin-bottom: 1.5rem;
+            padding-bottom: 1rem;
+            border-bottom: 2px solid var(--bg);
+        }
+
+        .question-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: #f9fafb;
+            padding: 1rem;
+            border-radius: 8px;
+            margin-bottom: 1rem;
+            gap: 1.5rem;
+            border: 1px solid transparent;
+            transition: all 0.2s;
+        }
+
+        .question-row:hover {
+            border-color: #e5e7eb;
+            background: #ffffff;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        }
+
+        .question-text {
+            flex: 1;
+            font-size: 1rem;
+        }
+
+        .input-group {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            position: relative;
+        }
+
+        .answer-input {
+            width: 90px;
+            padding: 0.5rem;
+            border: 2px solid var(--border);
+            border-radius: 6px;
+            font-size: 1rem;
+            text-align: right;
+            outline: none;
+            transition: all 0.2s;
+            background: white;
+        }
+
+        .answer-input:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.2);
+        }
+
+        .answer-input:disabled {
+            background-color: var(--bg);
+            color: var(--text-muted);
+            cursor: not-allowed;
+        }
+
+        .answer-input.input-correct {
+            border-color: var(--success) !important;
+            background-color: var(--success-bg) !important;
+            color: #065f46;
+        }
+
+        .answer-input.input-incorrect {
+            border-color: var(--danger) !important;
+            background-color: var(--danger-bg) !important;
+            color: #991b1b;
+        }
+
+        .unit-label {
+            font-weight: 600;
+            color: var(--text-muted);
+            min-width: 20px;
+        }
+
+        .correct-reveal {
+            position: absolute;
+            right: -100%;
+            top: 50%;
+            transform: translateY(-50%);
+            margin-left: 10px;
+            color: var(--success);
+            font-weight: 700;
+            background: var(--success-bg);
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            white-space: nowrap;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+        }
+
+        .hidden {
+            display: none !important;
+        }
+
+        /* Buttons & Actions */
+        .btn {
+            background-color: var(--primary);
+            color: white;
+            border: none;
+            padding: 0.75rem 1.5rem;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background-color 0.2s;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .btn:hover {
+            background-color: var(--primary-hover);
+        }
+
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        .action-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+        }
+
+        .bottom-action-bar {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+
+        .feedback-msg {
+            font-size: 1.1rem;
+            font-weight: 600;
+            text-align: center;
+            min-height: 27px;
+        }
+
+        /* Test Mode Setup */
+        .test-setup-box {
+            background: var(--card-bg);
+            border-radius: 12px;
+            padding: 3rem;
+            text-align: center;
+            box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);
+            max-width: 500px;
+            margin: 4rem auto;
+        }
+
+        .test-setup-box h2 {
+            margin-bottom: 1rem;
+            color: var(--text-main);
+        }
+
+        .test-setup-box p {
+            color: var(--text-muted);
+            margin-bottom: 2rem;
+        }
+
+        .name-input {
+            width: 100%;
+            padding: 0.75rem;
+            border: 2px solid var(--border);
+            border-radius: 8px;
+            font-size: 1rem;
+            margin-bottom: 1.5rem;
+            outline: none;
+            text-align: center;
+        }
+
+        .name-input:focus {
+            border-color: var(--primary);
+        }
+
+        .score-display {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--primary);
+            background: #eef2ff;
+            padding: 1rem 2rem;
+            border-radius: 12px;
+            margin-bottom: 1rem;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .question-row {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 1rem;
+            }
+            .input-group {
+                width: 100%;
+                justify-content: flex-end;
+            }
+            .correct-reveal {
+                position: static;
+                transform: none;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <nav class="navbar">
+        <div class="logo">The Normal Distribution</div>
+        <div class="nav-buttons">
+            <button id="nav-practice" class="nav-btn active">Practice Mode</button>
+            <button id="nav-test" class="nav-btn">Test Mode</button>
+        </div>
+    </nav>
+
+    <div class="container">
+        <!-- Practice View -->
+        <div id="view-practice" class="view active">
+            <div class="action-bar">
+                <h2 style="color: var(--text-main);">Practice Exercises</h2>
+                <button id="btn-generate-practice" class="btn" style="background: var(--text-main);">Generate Another Problem</button>
+            </div>
+            <div id="practice-container"></div>
+            <div class="bottom-action-bar">
+                <div id="practice-feedback" class="feedback-msg"></div>
+                <button id="btn-check-practice" class="btn" style="padding: 1rem 3rem; font-size: 1.1rem;">Check Answers</button>
+            </div>
+        </div>
+
+        <!-- Test Setup View -->
+        <div id="view-test-setup" class="view">
+            <div class="test-setup-box">
+                <h2>Ready for the Test?</h2>
+                <p>You will be given 2 problems with a total of 10 questions. Enter your name below to start.</p>
+                <input type="text" id="student-name" class="name-input" placeholder="Enter your full name" autocomplete="off">
+                <button id="btn-start-test" class="btn" style="width: 100%;">Start Test</button>
+            </div>
+        </div>
+
+        <!-- Test Active View -->
+        <div id="view-test-active" class="view">
+            <div class="action-bar">
+                <h2 style="color: var(--text-main);">Test Mode <span id="display-student-name" style="color: var(--primary); font-weight: normal; margin-left: 10px;"></span></h2>
+            </div>
+            <div id="test-container"></div>
+            <div class="bottom-action-bar">
+                <div id="test-feedback" class="feedback-msg"></div>
+                <button id="btn-submit-test" class="btn" style="padding: 1rem 3rem; font-size: 1.1rem;">Submit Test</button>
+                <button id="btn-retry-test" class="btn hidden" style="padding: 1rem 3rem; font-size: 1.1rem; background: var(--text-main);">Take Another Test</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Normal Distribution Contexts
+        const contexts =[
+            {
+                desc: "duration of a single ranked match in Mobile Legends: Bang Bang played by senior high school students",
+                origMu: 20,
+                origSigma: 3,
+                muDec: 0,
+                sigmaDec: 0,
+                unit: "minutes",
+                adj_less: "shorter",
+                adj_more: "longer",
+                q5_setup: "If {N} ranked matches played by senior high school students are tracked, how many matches will last"
+            },
+            {
+                desc: "number of hours Grade 11 students spend scrolling on social media before going to sleep",
+                origMu: 2.5,
+                origSigma: 0.5,
+                muDec: 1,
+                sigmaDec: 1,
+                unit: "hours",
+                adj_less: "fewer",
+                adj_more: "more",
+                q5_setup: "If {N} Grade 11 students are surveyed, how many will spend"
+            },
+            {
+                desc: "weight of the total export-quality mango harvest per tree in an orchard in Guimaras",
+                origMu: 120,
+                origSigma: 15,
+                muDec: 0,
+                sigmaDec: 0,
+                unit: "kilograms",
+                adj_less: "less",
+                adj_more: "more",
+                q5_setup: "If {N} mango trees are harvested, how many trees will yield a total weight of"
+            },
+            {
+                desc: "amount of extra rice consumed per customer during dinner rush hour at Aling Inasal",
+                origMu: 300,
+                origSigma: 50,
+                muDec: 0,
+                sigmaDec: 0,
+                unit: "grams",
+                adj_less: "less",
+                adj_more: "more",
+                q5_setup: "If {N} customers dine during the dinner rush hour, how many will consume"
+            },
+            {
+                desc: "daily rainfall recorded by PAGASA in a specific province during the peak of the Habagat season",
+                origMu: 150,
+                origSigma: 25,
+                muDec: 0,
+                sigmaDec: 0,
+                unit: "millimeters",
+                adj_less: "less",
+                adj_more: "more",
+                q5_setup: "If PAGASA records the rainfall for {N} days, how many days will have"
+            },
+            {
+                desc: "amount of time it takes for a group of friends to finally agree on a place to eat after someone says 'kahit saan'",
+                origMu: 25,
+                origSigma: 4,
+                muDec: 0,
+                sigmaDec: 0,
+                unit: "minutes",
+                adj_less: "less time",
+                adj_more: "more time",
+                q5_setup: "If {N} groups of friends are observed, how many groups will take"
+            },
+            {
+                desc: "volume of tears shed by viewers while watching the highly emotional finale of a trending K-Drama series",
+                origMu: 12,
+                origSigma: 3,
+                muDec: 0,
+                sigmaDec: 0,
+                unit: "milliliters",
+                adj_less: "less",
+                adj_more: "more",
+                q5_setup: "If {N} viewers are observed, how many will shed"
+            },
+            {
+                desc: "actual flight duration of commercial airplanes traveling from Ninoy Aquino International Airport to Narita International Airport",
+                origMu: 245,
+                origSigma: 12,
+                muDec: 0,
+                sigmaDec: 0,
+                unit: "minutes",
+                adj_less: "shorter",
+                adj_more: "longer",
+                q5_setup: "If {N} commercial flights on this route are tracked, how many will have a flight duration of"
+            },
+            {
+                desc: "exact time it takes to perfectly bake a batch of pandesal in a traditional oven at a neighborhood panaderia",
+                origMu: 720,
+                origSigma: 45,
+                muDec: 0,
+                sigmaDec: 0,
+                unit: "seconds",
+                adj_less: "less time",
+                adj_more: "more time",
+                q5_setup: "If {N} batches of pandesal are baked, how many batches will take"
+            },
+            {
+                desc: "resting heart rate of student-athletes preparing to compete in the Palarong Pambansa",
+                origMu: 60,
+                origSigma: 5,
+                muDec: 0,
+                sigmaDec: 0,
+                unit: "beats per minute",
+                adj_less: "less",
+                adj_more: "more",
+                q5_setup: "If {N} student-athletes are examined, how many will have a resting heart rate of"
+            }
+        ];
+
+        // 68-95-99.7 Cumulative Percentages from mean 0
+        const CUMULATIVE_PERCENTS = {
+            "-3": 0.15,
+            "-2": 2.50,
+            "-1": 16.00,
+            "0": 50.00,
+            "1": 84.00,
+            "2": 97.50,
+            "3": 99.85
+        };
+
+        // Utility Functions
+        function getArea(z1, z2) {
+            let p1 = z1 === -4 ? 0 : CUMULATIVE_PERCENTS[z1.toString()];
+            let p2 = z2 === 4 ? 100 : CUMULATIVE_PERCENTS[z2.toString()];
+            return Number(Math.abs(p2 - p1).toFixed(2));
+        }
+
+        function shuffle(array) {
+            let currentIndex = array.length, randomIndex;
+            while (currentIndex !== 0) {
+                randomIndex = Math.floor(Math.random() * currentIndex);
+                currentIndex--;
+                [array[currentIndex], array[randomIndex]] =[array[randomIndex], array[currentIndex]];
+            }
+            return array;
+        }
+
+        function randomizeParameter(val, decimals) {
+            let alpha = Math.floor(Math.random() * 51) - 25; // -25 to +25
+            let newVal = val * (1 + alpha / 100);
+            return Number(newVal.toFixed(decimals));
+        }
+
+        function getValidParameters(origMu, origSigma, muDec, sigmaDec) {
+            for (let i = 0; i < 1000; i++) {
+                let mu = randomizeParameter(origMu, muDec);
+                let sigma = randomizeParameter(origSigma, sigmaDec);
+                if (sigma > 0 && mu - 4 * sigma >= 0) {
+                    return { mu, sigma };
+                }
+            }
+            return { mu: origMu, sigma: origSigma };
+        }
+
+        // Problem Generator Logic
+        function generateSpecificProblem(ctx) {
+            let { mu, sigma } = getValidParameters(ctx.origMu, ctx.origSigma, ctx.muDec, ctx.sigmaDec);
+            
+            // Start with all 7 Standard Deviations indices needed to cover
+            let U =[-3, -2, -1, 0, 1, 2, 3];
+
+            // 1) Q1: Between, answer is 68, 95, or 99.7
+            let q1_z = Math.floor(Math.random() * 3) + 1; // 1, 2, or 3
+            let q1_z1 = -q1_z;
+            let q1_z2 = q1_z;
+            U = U.filter(z => z !== q1_z1 && z !== q1_z2);
+
+            // U has 5 items. Shuffle them.
+            U = shuffle(U);
+            
+            // 2) Q4: Between, but NOT 68, 95, or 99.7 (so not symmetric around 0)
+            if (U[0] === -U[1]) {
+                let temp = U[1];
+                U[1] = U[2];
+                U[2] = temp;
+            }
+            let q4_z1 = Math.min(U[0], U[1]);
+            let q4_z2 = Math.max(U[0], U[1]);
+
+            // 3) Distribute remaining values for Q2, Q3, Q5
+            let q2_z = U[2];
+            let q3_z = U[3];
+            let q5_z = U[4];
+
+            let val = (z) => Number((mu + z * sigma).toFixed(Math.max(ctx.muDec, ctx.sigmaDec)));
+
+            let Q1 = {
+                text: `What percentage of the population is between ${val(q1_z1)} ${ctx.unit} and ${val(q1_z2)} ${ctx.unit}?`,
+                answer: getArea(q1_z1, q1_z2),
+                isPercentage: true
+            };
+
+            let Q2 = {
+                text: `What percentage of the population is ${ctx.adj_less} than ${val(q2_z)} ${ctx.unit}?`,
+                answer: getArea(-4, q2_z),
+                isPercentage: true
+            };
+
+            let Q3 = {
+                text: `What percentage of the population is ${ctx.adj_more} than ${val(q3_z)} ${ctx.unit}?`,
+                answer: getArea(q3_z, 4),
+                isPercentage: true
+            };
+
+            let Q4 = {
+                text: `What percentage of the population is between ${val(q4_z1)} ${ctx.unit} and ${val(q4_z2)} ${ctx.unit}?`,
+                answer: getArea(q4_z1, q4_z2),
+                isPercentage: true
+            };
+
+            // Using multiples of 2000 ensures NO decimal values for headcount using Empirical Rule exact percents.
+            let N_options =[2000, 4000, 6000, 8000, 10000, 20000];
+            let N = N_options[Math.floor(Math.random() * N_options.length)];
+            let isLess = Math.random() > 0.5;
+
+            let q5_ans_percent = isLess ? getArea(-4, q5_z) : getArea(q5_z, 4);
+            let q5_ans_count = Math.round(N * (q5_ans_percent / 100));
+
+            let Q5 = {
+                text: `${ctx.q5_setup.replace('{N}', N.toLocaleString())} ${isLess ? ctx.adj_less : ctx.adj_more} than ${val(q5_z)} ${ctx.unit}?`,
+                answer: q5_ans_count,
+                isPercentage: false
+            };
+
+            return { ctx, mu, sigma, questions:[Q1, Q2, Q3, Q4, Q5] };
+        }
+
+        function generateProblemHTML(prob, index, isTest) {
+            let html = `
+            <div class="problem-card" data-index="${index}">
+                <div class="context-text">
+                    ${isTest ? `<strong style="color: var(--primary);">Problem ${index + 1}:</strong> ` : ''}
+                    The ${prob.ctx.desc} is normally distributed with a mean of <strong>${prob.mu} ${prob.ctx.unit} (μ = ${prob.mu})</strong> and a standard deviation of <strong>${prob.sigma} ${prob.ctx.unit} (σ = ${prob.sigma})</strong>.
+                </div>
+                <div>
+            `;
+            prob.questions.forEach((q, qIndex) => {
+                html += `
+                    <div class="question-row">
+                        <div class="question-text"><strong>${qIndex + 1}.)</strong> ${q.text}</div>
+                        <div class="input-group">
+                            <input type="number" step="any" class="answer-input" data-correct="${q.answer}" placeholder="0">
+                            ${q.isPercentage ? `<span class="unit-label">%</span>` : ''}
+                            <span class="correct-reveal hidden">✓ Correct: ${q.answer}</span>
+                        </div>
+                    </div>
+                `;
+            });
+            html += `</div></div>`;
+            return html;
+        }
+
+        // App State
+        let practiceAttempts = 0;
+        let testStudentName = "";
+
+        // Elements
+        const views = {
+            practice: document.getElementById('view-practice'),
+            testSetup: document.getElementById('view-test-setup'),
+            testActive: document.getElementById('view-test-active')
+        };
+        const navPractice = document.getElementById('nav-practice');
+        const navTest = document.getElementById('nav-test');
+
+        // Navigation
+        function switchView(viewName) {
+            Object.values(views).forEach(v => v.classList.remove('active'));
+            navPractice.classList.remove('active');
+            navTest.classList.remove('active');
+
+            if (viewName === 'practice') {
+                views.practice.classList.add('active');
+                navPractice.classList.add('active');
+                initPractice();
+            } else if (viewName === 'testSetup') {
+                views.testSetup.classList.add('active');
+                navTest.classList.add('active');
+                document.getElementById('student-name').focus();
+            } else if (viewName === 'testActive') {
+                views.testActive.classList.add('active');
+                navTest.classList.add('active');
+            }
+        }
+
+        navPractice.addEventListener('click', () => switchView('practice'));
+        navTest.addEventListener('click', () => switchView('testSetup'));
+
+        // --- Practice Mode ---
+        function initPractice() {
+            practiceAttempts = 0;
+            let ctx = contexts[Math.floor(Math.random() * contexts.length)];
+            let prob = generateSpecificProblem(ctx);
+            document.getElementById('practice-container').innerHTML = generateProblemHTML(prob, 0, false);
+            document.getElementById('practice-feedback').innerHTML = '';
+            
+            const btnCheck = document.getElementById('btn-check-practice');
+            btnCheck.disabled = false;
+            btnCheck.innerText = "Check Answers";
+        }
+
+        document.getElementById('btn-generate-practice').addEventListener('click', initPractice);
+
+        document.getElementById('btn-check-practice').addEventListener('click', function() {
+            let inputs = document.querySelectorAll('#practice-container .answer-input');
+            let allCorrect = true;
+
+            inputs.forEach(input => {
+                let userVal = parseFloat(input.value);
+                let correctVal = parseFloat(input.dataset.correct);
+                
+                input.classList.remove('input-correct', 'input-incorrect');
+
+                if (!isNaN(userVal) && userVal === correctVal) {
+                    input.classList.add('input-correct');
+                } else {
+                    input.classList.add('input-incorrect');
+                    allCorrect = false;
+                }
+            });
+
+            let feedback = document.getElementById('practice-feedback');
+
+            if (allCorrect) {
+                feedback.innerHTML = `<span style="color: var(--success);">🎉 Congratulations! All your answers are correct!</span>`;
+                inputs.forEach(input => input.disabled = true);
+                this.disabled = true;
+            } else {
+                practiceAttempts++;
+                if (practiceAttempts === 1) {
+                    feedback.innerHTML = `<span style="color: var(--danger);">Some answers are incorrect. You have 1 more try to fix them!</span>`;
+                } else {
+                    feedback.innerHTML = `<span style="color: var(--danger);">These are the correct answers. Better luck next time!</span>`;
+                    inputs.forEach(input => {
+                        input.disabled = true;
+                        let userVal = parseFloat(input.value);
+                        let correctVal = parseFloat(input.dataset.correct);
+                        if (isNaN(userVal) || userVal !== correctVal) {
+                            input.parentElement.querySelector('.correct-reveal').classList.remove('hidden');
+                        }
+                    });
+                    this.disabled = true;
+                }
+            }
+        });
+
+        // --- Test Mode ---
+        document.getElementById('btn-start-test').addEventListener('click', () => {
+            let name = document.getElementById('student-name').value.trim();
+            if (!name) {
+                alert("Please enter your name to start the test.");
+                return;
+            }
+            testStudentName = name;
+            document.getElementById('display-student-name').innerText = `| ${testStudentName}`;
+            
+            // Pick 2 unique contexts
+            let shuffled = shuffle([...contexts]);
+            let prob1 = generateSpecificProblem(shuffled[0]);
+            let prob2 = generateSpecificProblem(shuffled[1]);
+
+            let html = generateProblemHTML(prob1, 0, true) + generateProblemHTML(prob2, 1, true);
+            document.getElementById('test-container').innerHTML = html;
+            
+            document.getElementById('test-feedback').innerHTML = '';
+            document.getElementById('btn-submit-test').classList.remove('hidden');
+            document.getElementById('btn-retry-test').classList.add('hidden');
+
+            switchView('testActive');
+        });
+
+        document.getElementById('btn-submit-test').addEventListener('click', function() {
+            let inputs = document.querySelectorAll('#test-container .answer-input');
+            let score = 0;
+
+            inputs.forEach(input => {
+                let userVal = parseFloat(input.value);
+                let correctVal = parseFloat(input.dataset.correct);
+                
+                input.classList.remove('input-correct', 'input-incorrect');
+                input.disabled = true;
+
+                if (!isNaN(userVal) && userVal === correctVal) {
+                    input.classList.add('input-correct');
+                    score++;
+                } else {
+                    input.classList.add('input-incorrect');
+                    input.parentElement.querySelector('.correct-reveal').classList.remove('hidden');
+                }
+            });
+
+            let feedback = document.getElementById('test-feedback');
+            feedback.innerHTML = `<div class="score-display">Test Complete! Score: ${score} / 10</div>`;
+
+            this.classList.add('hidden');
+            document.getElementById('btn-retry-test').classList.remove('hidden');
+        });
+
+        document.getElementById('btn-retry-test').addEventListener('click', () => {
+            switchView('testSetup');
+        });
+
+        // Initialize App
+        document.addEventListener('DOMContentLoaded', () => {
+            initPractice();
+        });
+
+    </script>
+</body>
+</html>
